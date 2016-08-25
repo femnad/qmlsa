@@ -39,8 +39,9 @@ int main(int argc, char **argv) {
     for (;;) {
         num_read = recvfrom(sfd, client_request, sizeof(client_request), 0, (struct sockaddr *) &claddr, &len);
         struct quic_packet qp;
-        qp.public_flags = PUBLIC_FLAG_VERSION;
+        qp.public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET;
         printf("Got public flag: %d\n", client_request->public_flags);
+        printf("Connection id is %d\n", client_request->connection_id);
         sendto(sfd, &qp, num_read, 0, (struct sockaddr *) &claddr, len);
     }
 

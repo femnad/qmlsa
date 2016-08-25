@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "quic_packet.h"
@@ -22,6 +23,8 @@ int main(int argc, char **argv) {
 
     struct quic_packet *qp_request = malloc(sizeof(struct quic_packet));
     qp_request->public_flags = PUBLIC_FLAG_VERSION;
+    srand(time(NULL));
+    qp_request->connection_id = rand();
     sendto(cfd, qp_request, sizeof(qp_request), 0, (struct sockaddr *) &svaddr, sizeof(struct sockaddr));
     int num_bytes = recvfrom(cfd, qp_response, BUF_SIZE, 0, NULL, NULL);
     if (num_bytes == -1) {

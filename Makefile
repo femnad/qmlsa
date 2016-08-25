@@ -1,10 +1,10 @@
 all: quic_server quic_client
 
 quic_server: quic_server.c
-	clang quic_server.c -o quic_server
+	clang -Wall quic_server.c -o quic_server
 
 quic_client: quic_client.c
-	clang quic_client.c -o quic_client
+	clang -Wall quic_client.c -o quic_client
 
 clean:
 	rm -f quic_server
