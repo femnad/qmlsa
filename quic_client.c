@@ -10,8 +10,6 @@
 
 #include "quic_packet.h"
 
-#define BUF_SIZE 1024
-
 int main(int argc, char **argv) {
     int cfd = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in svaddr;
@@ -25,8 +23,10 @@ int main(int argc, char **argv) {
     qp_request->public_flags = PUBLIC_FLAG_VERSION;
     srand(time(NULL));
     qp_request->connection_id = rand();
-    sendto(cfd, qp_request, sizeof(qp_request), 0, (struct sockaddr *) &svaddr, sizeof(struct sockaddr));
-    int num_bytes = recvfrom(cfd, qp_response, BUF_SIZE, 0, NULL, NULL);
+    sendto(cfd, qp_request, sizeof(qp_request), 0, (struct sockaddr *) &svaddr,
+           sizeof(struct sockaddr));
+    int num_bytes = recvfrom(cfd, qp_response, sizeof(struct quic_packet), 0,
+                             NULL, NULL);
     if (num_bytes == -1) {
         printf("recvfrom fail");
         exit(-1);
