@@ -14,22 +14,28 @@ int main(int argc, char **argv) {
     int cfd = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in svaddr;
     struct quic_packet *qp_response = malloc(sizeof(struct quic_packet));
+    struct quic_public_packet_header *response_header =
+        malloc(sizeof(struct quic_public_packet_header));
+    qp_response->public_header = *response_header;
     memset(&svaddr, 0, sizeof(struct sockaddr_in));
     svaddr.sin_family = AF_INET;
     svaddr.sin_port = htons(9876);
     inet_pton(AF_INET, "127.0.0.1", &svaddr.sin_addr);
 
     struct quic_packet *qp_request = malloc(sizeof(struct quic_packet));
-    qp_request->public_flags = PUBLIC_FLAG_VERSION;
+    struct quic_public_packet_header *public_header =
+        malloc(sizeof(struct quic_public_packet_header));
+    public_header->public_flags = PUBLIC_FLAG_VERSION;
     srand(time(NULL));
-    qp_request->connection_id = rand();
-    sendto(cfd, qp_request, sizeof(qp_request), 0, (struct sockaddr *) &svaddr,
-           sizeof(struct sockaddr));
-    int num_bytes = recvfrom(cfd, qp_response, sizeof(struct quic_packet), 0,
-                             NULL, NULL);
-    if (num_bytes == -1) {
-        printf("recvfrom fail");
-        exit(-1);
-    }
-    printf("Got public flag: %d\n", qp_response->public_flags);
+    public_header->connection_id = rand();
+    qp_request->public_header = *public_header;
+    int sent_bytes = sendto(cfd, qp_request, sizeof(struct quic_packet), 0,
+                            (struct sockaddr *) &svaddr,
+                            sizeof(struct sockaddr));
+    printf("Sent %d bytes\n", sent_bytes);
+    int received_bytes = recvfrom(cfd, qp_response,
+                                  sizeof(struct quic_packet), 0, NULL, NULL);
+    printf("Received %d bytes\n", received_bytes);
+    printf("Got public flag: %d\n", qp_response->public_header.public_flags);
+    printf("Got quic version: %s\n", qp_response->public_header.quic_version);
 }
