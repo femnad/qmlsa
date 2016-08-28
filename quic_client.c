@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "quic_packet.h"
+#include "quic_util.h"
 
 int main(int argc, char **argv) {
     int cfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -26,6 +27,7 @@ int main(int argc, char **argv) {
     struct quic_public_packet_header *public_header =
         malloc(sizeof(struct quic_public_packet_header));
     public_header->public_flags = PUBLIC_FLAG_VERSION;
+    public_header->packet_number = 1;
     srand(time(NULL));
     public_header->connection_id = rand();
     qp_request->public_header = *public_header;
@@ -36,6 +38,5 @@ int main(int argc, char **argv) {
     int received_bytes = recvfrom(cfd, qp_response,
                                   sizeof(struct quic_packet), 0, NULL, NULL);
     printf("Received %d bytes\n", received_bytes);
-    printf("Got public flag: %d\n", qp_response->public_header.public_flags);
-    printf("Got quic version: %s\n", qp_response->public_header.quic_version);
+    print_quic_packet(qp_response);
 }
