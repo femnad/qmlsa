@@ -31,12 +31,20 @@ int main(int argc, char **argv) {
     srand(time(NULL));
     public_header->connection_id = rand();
     qp_request->public_header = *public_header;
-    int sent_bytes = sendto(cfd, qp_request, sizeof(struct quic_packet), 0,
-                            (struct sockaddr *) &svaddr,
-                            sizeof(struct sockaddr));
-    printf("Sent %d bytes\n", sent_bytes);
-    int received_bytes = recvfrom(cfd, qp_response,
-                                  sizeof(struct quic_packet), 0, NULL, NULL);
-    printf("Received %d bytes\n", received_bytes);
-    print_quic_packet(qp_response);
+    while (1) {
+        int sent_bytes = sendto(cfd, qp_request, sizeof(struct quic_packet), 0,
+                                (struct sockaddr *) &svaddr,
+                                sizeof(struct sockaddr));
+        printf("Sent %d bytes\n", sent_bytes);
+        int received_bytes = recvfrom(cfd, qp_response,
+                                      sizeof(struct quic_packet), 0, NULL, NULL);
+        printf("Received %d bytes\n", received_bytes);
+        print_quic_packet(qp_response);
+        if (should_reset(qp_response)) {
+            printf("Resetting connection per public flag");
+        }
+        break;
+    }
+    free(qp_request);
+    free(qp_response);
 }
