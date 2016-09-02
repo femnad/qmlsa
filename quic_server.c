@@ -9,6 +9,8 @@
 #include "quic_packet.h"
 #include "quic_util.h"
 
+#define DEFAULT_VERSION "Q025"
+
 int main(int argc, char **argv) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -46,7 +48,7 @@ int main(int argc, char **argv) {
         struct quic_public_packet_header *public_header =
             malloc(sizeof(struct quic_public_packet_header));
         public_header->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET;
-        strcpy(public_header->quic_version, "Q025");
+        strcpy(public_header->quic_version, DEFAULT_VERSION);
         public_header->packet_number = client_request->public_header.packet_number + 1;
         qp->public_header = *public_header;
         int sent_bytes = sendto(sfd, qp, sizeof(struct quic_packet), 0,
