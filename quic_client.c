@@ -11,7 +11,13 @@
 #include "quic_packet.h"
 #include "quic_util.h"
 
+#define INITIAL_VERSION "Q034"
+
 int main(int argc, char **argv) {
+    if (argc != 3) {
+        printf("Usage: quic_client <host> <port>\n");
+        exit(1);
+    }
     int cfd = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in svaddr;
     quic_packet *qp_response = malloc(sizeof(quic_packet));
@@ -20,8 +26,8 @@ int main(int argc, char **argv) {
     qp_response->public_header = *response_header;
     memset(&svaddr, 0, sizeof(struct sockaddr_in));
     svaddr.sin_family = AF_INET;
-    svaddr.sin_port = htons(9876);
-    inet_pton(AF_INET, "127.0.0.1", &svaddr.sin_addr);
+    svaddr.sin_port = htons(atoi(argv[2]));
+    inet_pton(AF_INET, argv[1], &svaddr.sin_addr);
 
     quic_packet *qp_request = malloc(sizeof(quic_packet));
     quic_public_packet_header *public_header =
@@ -30,7 +36,9 @@ int main(int argc, char **argv) {
     public_header->packet_number = 1;
     srand(time(NULL));
     public_header->connection_id = rand();
+    strcpy(public_header->quic_version, INITIAL_VERSION);
     qp_request->public_header = *public_header;
+    qp_request->sequence_number = 1;
     int reset = 0;
     while (1) {
         int sent_bytes = sendto(cfd, qp_request, sizeof(quic_packet), 0,

@@ -9,7 +9,7 @@
 #include "quic_packet.h"
 #include "quic_util.h"
 
-#define DEFAULT_VERSION "Q025"
+#define DEFAULT_VERSION "Q034"
 
 int main(int argc, char **argv) {
     struct addrinfo hints;
@@ -51,8 +51,13 @@ int main(int argc, char **argv) {
         strcpy(public_header->quic_version, DEFAULT_VERSION);
         public_header->packet_number = client_request->public_header.packet_number + 1;
         qp->public_header = *public_header;
+        qp->sequence_number = 2;
         int sent_bytes = sendto(sfd, qp, sizeof(quic_packet), 0,
                                 (struct sockaddr *) &claddr, len);
+        if (sent_bytes == -1) {
+            perror("Error sending packet to client");
+            exit(1);
+        }
         printf("Sent %d bytes\n", sent_bytes);
     }
 

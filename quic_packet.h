@@ -16,4 +16,5 @@ typedef struct _quic_public_packet_header {
 
 typedef struct _quic_packet {
     quic_public_packet_header public_header;
+    int sequence_number;
 } quic_packet;
