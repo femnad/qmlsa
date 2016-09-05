@@ -38,20 +38,20 @@ int main(int argc, char **argv) {
         close(sfd);
     }
 
-    struct quic_packet *client_request = malloc(sizeof(struct quic_packet));
+    quic_packet *client_request = malloc(sizeof(quic_packet));
     for (;;) {
-        num_read = recvfrom(sfd, client_request, sizeof(struct quic_packet), 0,
+        num_read = recvfrom(sfd, client_request, sizeof(quic_packet), 0,
                             (struct sockaddr *) &claddr, &len);
         printf("Read %d bytes\n", num_read);
         print_quic_packet(client_request);
-        struct quic_packet *qp = malloc(sizeof(struct quic_packet));
-        struct quic_public_packet_header *public_header =
-            malloc(sizeof(struct quic_public_packet_header));
+        quic_packet *qp = malloc(sizeof(quic_packet));
+        quic_public_packet_header *public_header =
+            malloc(sizeof(quic_public_packet_header));
         public_header->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET;
         strcpy(public_header->quic_version, DEFAULT_VERSION);
         public_header->packet_number = client_request->public_header.packet_number + 1;
         qp->public_header = *public_header;
-        int sent_bytes = sendto(sfd, qp, sizeof(struct quic_packet), 0,
+        int sent_bytes = sendto(sfd, qp, sizeof(quic_packet), 0,
                                 (struct sockaddr *) &claddr, len);
         printf("Sent %d bytes\n", sent_bytes);
     }

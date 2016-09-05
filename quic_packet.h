@@ -1,14 +1,19 @@
+#include <stdint.h>
+
 #define PUBLIC_FLAG_VERSION 0x01
 #define PUBLIC_FLAG_RESET 0x02
-#define CONNECTION_ID_PRESENT 0x08
+#define PUBLIC_FLAG_DIVERSIFICATION_NONCE 0x04
+#define PUBLIC_FLAG_FULL_CID_PRESENT 0x08
+#define RESERVED_PUBLIC_FLAG_MULTIPATH 0x40
+#define UNUSED_PUBLIC_FLAG 0x80
 
-struct quic_public_packet_header {
+typedef struct _quic_public_packet_header {
     int public_flags;
-    unsigned int connection_id;
+    int64_t connection_id;
     char quic_version[5];
     int packet_number;
-};
+} quic_public_packet_header;
 
-struct quic_packet {
-    struct quic_public_packet_header public_header;
-};
+typedef struct _quic_packet {
+    quic_public_packet_header public_header;
+} quic_packet;
