@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
     inet_pton(AF_INET, argv[1], &svaddr.sin_addr);
 
     quic_packet *qp_request = malloc(sizeof(quic_packet));
-    qp_request->public_flags = 0x0d;
+    qp_request->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_FULL_CID_PRESENT;
     srand(time(NULL));
     int connection_id = rand();
     qp_request->connection_id = connection_id;
@@ -36,14 +36,15 @@ int main(int argc, char **argv) {
     qp_request->packet_number = 1;
     char *buffer = malloc(64 * sizeof(char));
     memcpy(buffer, &(qp_request->public_flags), 1);
-    memcpy(buffer+1, &(qp_request->connection_id), 8);
-    memcpy(buffer+9, &(qp_request->quic_version), 4);
-    memcpy(buffer+13, &(qp_request->packet_number), 4);
-    long int payload = 0x3e8f101cdff6bab; // nonsensical payload
-    memcpy(buffer+17, &payload, sizeof(payload));
+    memcpy(buffer+1, &(qp_request->connection_id), 4);
+    memcpy(buffer+5, &(qp_request->quic_version), 4);
+    memcpy(buffer+9, &(qp_request->packet_number), 4);
+    char *payload = "3e8f101cdff6bab"; // nonsensical payload
+    size_t payload_size = strlen(payload);
+    memcpy(buffer+13, &payload, payload_size);
     int reset = 0;
     while (1) {
-        size_t buffer_size = sizeof(char) * 17 + sizeof(payload);
+        size_t buffer_size = sizeof(char) * 17 + payload_size;
         int sent_bytes = sendto(cfd, buffer, buffer_size, 0,
                                 (struct sockaddr *) &svaddr,
                                 sizeof(struct sockaddr));
