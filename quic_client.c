@@ -11,7 +11,7 @@
 #include "quic_packet.h"
 #include "quic_util.h"
 
-#define INITIAL_VERSION "Q034"
+#define INITIAL_VERSION 0x51303336
 
 int main(int argc, char **argv) {
     if (argc != 3) {
@@ -21,27 +21,30 @@ int main(int argc, char **argv) {
     int cfd = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in svaddr;
     quic_packet *qp_response = malloc(sizeof(quic_packet));
-    quic_public_packet_header *response_header =
-        malloc(sizeof(quic_public_packet_header));
-    qp_response->public_header = *response_header;
     memset(&svaddr, 0, sizeof(struct sockaddr_in));
     svaddr.sin_family = AF_INET;
     svaddr.sin_port = htons(atoi(argv[2]));
     inet_pton(AF_INET, argv[1], &svaddr.sin_addr);
 
     quic_packet *qp_request = malloc(sizeof(quic_packet));
-    quic_public_packet_header *public_header =
-        malloc(sizeof(quic_public_packet_header));
-    public_header->public_flags = PUBLIC_FLAG_VERSION;
-    public_header->packet_number = 1;
+    qp_request->public_flags = 0x0d;
     srand(time(NULL));
-    public_header->connection_id = rand();
-    strcpy(public_header->quic_version, INITIAL_VERSION);
-    qp_request->public_header = *public_header;
-    qp_request->sequence_number = 1;
+    int connection_id = rand();
+    qp_request->connection_id = connection_id;
+    printf("Connection ID is %d\n", connection_id);
+    qp_request->quic_version = htonl(INITIAL_VERSION);
+    qp_request->packet_number = 1;
+    char *buffer = malloc(64 * sizeof(char));
+    memcpy(buffer, &(qp_request->public_flags), 1);
+    memcpy(buffer+1, &(qp_request->connection_id), 8);
+    memcpy(buffer+9, &(qp_request->quic_version), 4);
+    memcpy(buffer+13, &(qp_request->packet_number), 4);
+    long int payload = 0x3e8f101cdff6bab; // nonsensical payload
+    memcpy(buffer+17, &payload, sizeof(payload));
     int reset = 0;
     while (1) {
-        int sent_bytes = sendto(cfd, qp_request, sizeof(quic_packet), 0,
+        size_t buffer_size = sizeof(char) * 17 + sizeof(payload);
+        int sent_bytes = sendto(cfd, buffer, buffer_size, 0,
                                 (struct sockaddr *) &svaddr,
                                 sizeof(struct sockaddr));
         printf("Sent %d bytes\n", sent_bytes);

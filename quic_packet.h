@@ -7,14 +7,9 @@
 #define RESERVED_PUBLIC_FLAG_MULTIPATH 0x40
 #define UNUSED_PUBLIC_FLAG 0x80
 
-typedef struct _quic_public_packet_header {
-    int public_flags;
-    int64_t connection_id;
-    char quic_version[5];
-    int packet_number;
-} quic_public_packet_header;
-
 typedef struct _quic_packet {
-    quic_public_packet_header public_header;
-    int sequence_number;
+    unsigned int public_flags;
+    unsigned long int connection_id;
+    unsigned int quic_version;
+    unsigned long int packet_number;
 } quic_packet;

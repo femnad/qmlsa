@@ -16,6 +16,10 @@ clean:
 	rm -f quic_server
 	rm -f quic_client
 
-debug: quic_client.c quic_server.c $(UTIL_FILES) $(HEADER_FILES)
-	$(CC) $(DEBUG_FLAGS) quic_server.c $(UTIL_FILES) -o quic_server
-	$(CC) $(DEBUG_FLAGS) quic_client.c $(UTIL_FILES) -o quic_client
+debug_quic_server: quic_server.c $(HEADER_FILES)
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) quic_server.c $(UTIL_FILES) -o quic_server
+
+debug_quic_client: quic_client.c $(HEADER_FILES)
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) quic_client.c $(UTIL_FILES) -o quic_client
+
+debug: debug_quic_server debug_quic_client
