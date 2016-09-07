@@ -33,15 +33,18 @@ int main(int argc, char **argv) {
     int connection_id = rand();
     qp_request->connection_id = connection_id;
     qp_request->quic_version = htonl(INITIAL_VERSION);
-    qp_request->packet_number = 1;
+    qp_request->sequence = 1;
     char *buffer = serialize_quic_packet(qp_request);
-    char *receive_buffer = malloc(sizeof(char) * 64);
+    unsigned char *receive_buffer = malloc(sizeof(char) * 64);
     while (1) {
         int sent_bytes = sendto(cfd, buffer, MAGIC_NUMBER, 0,
                                 (struct sockaddr *) &svaddr,
                                 sizeof(struct sockaddr));
         printf("Sent %d bytes\n", sent_bytes);
         int received_bytes = recvfrom(cfd, receive_buffer, 64, 0, NULL, NULL);
+        quic_packet_buffer *server_response = get_quic_packet_from_buffer((Bytes)
+                                                                   receive_buffer,
+                                                                   received_bytes);
         sendto(cfd, receive_buffer, received_bytes, 0,
                                 (struct sockaddr *) &svaddr,
                                 sizeof(struct sockaddr));

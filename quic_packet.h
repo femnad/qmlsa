@@ -11,5 +11,14 @@ typedef struct _quic_packet {
     unsigned int public_flags;
     unsigned long int connection_id;
     unsigned int quic_version;
-    unsigned long int packet_number;
+    unsigned int sequence;
+    unsigned char *payload;
 } quic_packet;
+
+typedef struct _quic_packet_buffer {
+    unsigned char *public_flags;
+    unsigned char *connection_id;
+    unsigned char *quic_version;
+    unsigned char *sequence;
+    unsigned char *payload;
+} quic_packet_buffer;
