@@ -12,6 +12,7 @@
 #include "quic_util.h"
 
 #define INITIAL_VERSION 0x51303336
+#define MAGIC_NUMBER 17
 
 int main(int argc, char **argv) {
     if (argc != 3) {
@@ -31,43 +32,20 @@ int main(int argc, char **argv) {
     srand(time(NULL));
     int connection_id = rand();
     qp_request->connection_id = connection_id;
-    printf("Connection ID is %d\n", connection_id);
     qp_request->quic_version = htonl(INITIAL_VERSION);
     qp_request->packet_number = 1;
-    char *buffer = malloc(64 * sizeof(char));
-    memcpy(buffer, &(qp_request->public_flags), 1);
-    memcpy(buffer+1, &(qp_request->connection_id), 4);
-    memcpy(buffer+5, &(qp_request->quic_version), 4);
-    memcpy(buffer+9, &(qp_request->packet_number), 4);
-    char *payload = "3e8f101cdff6bab"; // nonsensical payload
-    size_t payload_size = strlen(payload);
-    memcpy(buffer+13, &payload, payload_size);
-    int reset = 0;
+    char *buffer = serialize_quic_packet(qp_request);
+    char *receive_buffer = malloc(sizeof(char) * 64);
     while (1) {
-        size_t buffer_size = sizeof(char) * 17 + payload_size;
-        int sent_bytes = sendto(cfd, buffer, buffer_size, 0,
+        int sent_bytes = sendto(cfd, buffer, MAGIC_NUMBER, 0,
                                 (struct sockaddr *) &svaddr,
                                 sizeof(struct sockaddr));
         printf("Sent %d bytes\n", sent_bytes);
-        int received_bytes = recvfrom(cfd, qp_response,
-                                      sizeof(quic_packet), 0, NULL, NULL);
-        printf("Received %d bytes\n", received_bytes);
-        print_quic_packet(qp_response);
-        quic_action response_action = handle_packet(qp_response);
-
-        switch (response_action) {
-        case HANDLE_RESET_PACKET:
-            reset = 1;
-            break;
-        case UNHANDLED:
-            printf("Unhandled package\n");
-        default:
-            printf("You shouldn't be seeing this\n");
-        }
-
-        if (reset) {
-            break;
-        }
+        int received_bytes = recvfrom(cfd, receive_buffer, 64, 0, NULL, NULL);
+        sendto(cfd, receive_buffer, received_bytes, 0,
+                                (struct sockaddr *) &svaddr,
+                                sizeof(struct sockaddr));
+        printf("Sent %d bytes\n", sent_bytes);
     }
     free(qp_request);
     free(qp_response);
