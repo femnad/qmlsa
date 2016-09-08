@@ -20,3 +20,6 @@ get_quic_version_packet_from_buffer(Bytes, size_t);
 void
 build_quic_packet_buffer(Bytes, unsigned int, unsigned long, unsigned int,
                          unsigned int, Bytes);
+
+long
+network_ordered_bytes_to_long(Bytes);

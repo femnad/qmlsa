@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +8,7 @@
 
 #define BUFFER_SIZE 64
 #define CONNECTION_ID_SIZE 8
+#define HEXADECIMAL_BASE 16
 #define QUIC_VERSION_SIZE 4
 #define PAYLOAD_SIZE 18
 #define PUBLIC_FLAGS_SIZE 1
@@ -45,11 +47,21 @@ get_quic_version_packet_from_buffer(Bytes buffer, size_t packet_size) {
     int version_start = PUBLIC_FLAGS_SIZE + CONNECTION_ID_SIZE;
     int number_of_versions = (packet_size - version_start) / QUIC_VERSION_SIZE;
     __qvp->versions = malloc(sizeof(char *) * number_of_versions);
-    for (int i = version_start; i+QUIC_VERSION_SIZE <= (int) packet_size;
-         i+=QUIC_VERSION_SIZE) {
+    for (int i = version_start; i + QUIC_VERSION_SIZE <= (int) packet_size;
+         i += QUIC_VERSION_SIZE) {
         *(__qvp->versions + version_index) = get_sub_range(buffer, i, i + QUIC_VERSION_SIZE - 1);
         version_index++;
     }
     __qvp->number_of_supported_versions = version_index;
     return __qvp;
+}
+
+long
+network_ordered_bytes_to_long(Bytes buffer) {
+    long total = 0;
+    size_t buffer_length = strlen((const char *) buffer);
+    for (unsigned long i = 0; i < buffer_length; i++) {
+        total += (int) *(buffer + i) * (long) pow(HEXADECIMAL_BASE, i * 2);
+    }
+    return total;
 }

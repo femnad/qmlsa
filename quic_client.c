@@ -43,6 +43,8 @@ int main(int argc, char **argv) {
         quic_version_packet *server_response = get_quic_version_packet_from_buffer(
                                                                    receive_buffer,
                                                                    received_bytes);
+        long connection_id = network_ordered_bytes_to_long(server_response->connection_id);
+        printf("Connection id is: %ld\n", connection_id);
         printf("Supported versions:\n");
         for (int i = 0; i < server_response->number_of_supported_versions; i++) {
             printf("%s\n", *(server_response->versions + i));
