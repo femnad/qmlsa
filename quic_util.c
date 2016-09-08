@@ -9,6 +9,7 @@
 #define BUFFER_SIZE 64
 #define CONNECTION_ID_SIZE 8
 #define HEXADECIMAL_BASE 16
+#define LOG_2_OF_16 4
 #define QUIC_VERSION_SIZE 4
 #define PAYLOAD_SIZE 18
 #define PUBLIC_FLAGS_SIZE 1
@@ -64,4 +65,23 @@ network_ordered_bytes_to_long(Bytes buffer) {
         total += (int) *(buffer + i) * (long) pow(HEXADECIMAL_BASE, i * 2);
     }
     return total;
+}
+
+Bytes
+connection_id_to_network_ordered_bytes(long number) {
+    Bytes buffer = malloc(sizeof(char) * CONNECTION_ID_SIZE);
+    // Start allocating from the end
+    int power = 14;
+    unsigned char host_ordered_bytes[CONNECTION_ID_SIZE];
+    int cursor = 0;
+    while (number > 1) {
+        int digit = number >> (power * LOG_2_OF_16);
+        host_ordered_bytes[cursor++] = (unsigned char) digit;
+        number -= digit * (long) pow(HEXADECIMAL_BASE, power);
+        power -= 2;
+    }
+    for (int i = 0; i < CONNECTION_ID_SIZE; i++) {
+        *(buffer + i) = host_ordered_bytes[CONNECTION_ID_SIZE - 1 - i];
+    }
+    return buffer;
 }

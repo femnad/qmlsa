@@ -23,3 +23,6 @@ build_quic_packet_buffer(Bytes, unsigned int, unsigned long, unsigned int,
 
 long
 network_ordered_bytes_to_long(Bytes);
+
+Bytes
+connection_id_to_network_ordered_bytes(long);
