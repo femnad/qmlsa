@@ -8,6 +8,7 @@
 
 #define BUFFER_SIZE 64
 #define CONNECTION_ID_SIZE 8
+#define HARDCODED_PACKET_SIZE 19
 #define HEXADECIMAL_BASE 16
 #define LOG_2_OF_16 4
 #define QUIC_VERSION_SIZE 4
@@ -26,15 +27,14 @@ get_sub_range(void *buffer, int start, int end) {
 
 char *
 serialize_quic_packet(quic_packet *__qp) {
-    char *buffer = malloc(BUFFER_SIZE * sizeof(char));
-    memcpy(buffer, &(__qp->public_flags), 1);
-    memcpy(buffer+1, &(__qp->connection_id), 4);
-    memcpy(buffer+5, &(__qp->quic_version), 4);
-    memcpy(buffer+9, &(__qp->sequence), 4);
-    char *payload = "3e8f101cdff6bab"; // nonsensical payload
-    size_t payload_size = strlen(payload);
-    memcpy(buffer+13, &payload, payload_size);
-    memcpy(buffer+13+payload_size, "/0", 1);
+    char *buffer = malloc(HARDCODED_PACKET_SIZE * sizeof(char));
+    memcpy(buffer, "\t", 1);
+    // Connection ID determined via d(2*64) dice throw
+    memcpy(buffer+1, connection_id_to_network_ordered_bytes(3905518428042365511), 8);
+    memcpy(buffer+9, "Q036", 4);
+    memcpy(buffer+13, "\001", 1);
+    memcpy(buffer+14, "CHLO", 4);
+    memcpy(buffer+19, "\0", 1);
     return buffer;
 }
 

@@ -11,9 +11,6 @@
 #include "quic_packet.h"
 #include "quic_util.h"
 
-#define INITIAL_VERSION 0x51303336
-#define MAGIC_NUMBER 17
-
 int main(int argc, char **argv) {
     if (argc != 3) {
         printf("Usage: quic_client <host> <port>\n");
@@ -28,17 +25,15 @@ int main(int argc, char **argv) {
     inet_pton(AF_INET, argv[1], &svaddr.sin_addr);
 
     quic_packet *qp_request = malloc(sizeof(quic_packet));
-    qp_request->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_FULL_CID_PRESENT;
-    srand(time(NULL));
-    int connection_id = rand();
-    qp_request->connection_id = connection_id;
-    qp_request->quic_version = htonl(INITIAL_VERSION);
-    qp_request->sequence = 1;
     char *buffer = serialize_quic_packet(qp_request);
     unsigned char *receive_buffer = malloc(sizeof(char) * 64);
     while (1) {
-        sendto(cfd, buffer, MAGIC_NUMBER, 0, (struct sockaddr *) &svaddr,
+        int sent_bytes = sendto(cfd, buffer, strlen(buffer), 0, (struct sockaddr *) &svaddr,
                sizeof(struct sockaddr));
+        if (sent_bytes == -1) {
+            perror("Sendto error");
+            exit(1);
+        }
         int received_bytes = recvfrom(cfd, receive_buffer, 64, 0, NULL, NULL);
         quic_version_packet *server_response = get_quic_version_packet_from_buffer(
                                                                    receive_buffer,
