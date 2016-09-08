@@ -47,9 +47,7 @@ get_quic_version_packet_from_buffer(Bytes buffer, size_t packet_size) {
     __qvp->versions = malloc(sizeof(char *) * number_of_versions);
     for (int i = version_start; i+QUIC_VERSION_SIZE <= (int) packet_size;
          i+=QUIC_VERSION_SIZE) {
-        char * current_version = *(__qvp->versions + version_index);
-        current_version = get_sub_range(buffer, i, i+QUIC_VERSION_SIZE-1);
-        *(__qvp->versions + version_index) = current_version;
+        *(__qvp->versions + version_index) = get_sub_range(buffer, i, i + QUIC_VERSION_SIZE - 1);
         version_index++;
     }
     __qvp->number_of_supported_versions = version_index;
