@@ -35,45 +35,23 @@ serialize_quic_packet(quic_packet *__qp) {
     return buffer;
 }
 
-quic_packet_buffer *
-get_quic_packet_from_buffer(Bytes buffer, size_t packet_size) {
-    quic_packet_buffer *__qp = malloc(sizeof(quic_packet_buffer));
-    Bytes public_flags = get_sub_range(buffer, 0, 0);
-    Bytes connection_id = get_sub_range(buffer, 1, 8);
-    Bytes quic_version = get_sub_range(buffer, 9, 12);
-    Bytes sequence = get_sub_range(buffer, 13, 13);
-    Bytes payload = get_sub_range(buffer, 14, packet_size);
-    __qp->public_flags = public_flags;
-    __qp->connection_id = connection_id;
-    __qp->quic_version = quic_version;
-    __qp->sequence = sequence;
-    __qp->payload = payload;
-    return __qp;
-}
-
-void
-build_quic_packet_buffer(Bytes packet_buffer, Bytes flags, Bytes connection_id,
-                       Bytes quic_version, Bytes sequence, Bytes payload) {
-    Bytes p = packet_buffer;
-    int cursor = 0;
-    for (int i = 0; i < PUBLIC_FLAGS_SIZE; i++) {
-        *(p + cursor) = *(flags + i);
-        cursor++;
+quic_version_packet *
+get_quic_version_packet_from_buffer(Bytes buffer, size_t packet_size) {
+    quic_version_packet *__qvp = malloc(sizeof(quic_version_packet));
+    __qvp->public_flags = get_sub_range(buffer, 0, 0);
+    __qvp->connection_id = get_sub_range(buffer, PUBLIC_FLAGS_SIZE,
+                                         CONNECTION_ID_SIZE);
+    int version_index = 0;
+    int version_start = PUBLIC_FLAGS_SIZE + CONNECTION_ID_SIZE;
+    int number_of_versions = (packet_size - version_start) / QUIC_VERSION_SIZE;
+    __qvp->versions = malloc(sizeof(char *) * number_of_versions);
+    for (int i = version_start; i+QUIC_VERSION_SIZE <= (int) packet_size;
+         i+=QUIC_VERSION_SIZE) {
+        char * current_version = *(__qvp->versions + version_index);
+        current_version = get_sub_range(buffer, i, i+QUIC_VERSION_SIZE-1);
+        *(__qvp->versions + version_index) = current_version;
+        version_index++;
     }
-    for (int i = 0; i < CONNECTION_ID_SIZE; i++) {
-        *(p + cursor) = *(connection_id + i);
-        cursor++;
-    }
-    for (int i = 0; i < QUIC_VERSION_SIZE; i++) {
-        *(p + cursor) = *(quic_version + i);
-        cursor++;
-    }
-    for (int i = 0; i < SEQUENCE_SIZE; i++) {
-        *(p + cursor) = *(sequence + i);
-        cursor++;
-    }
-    for (int i = 0; i < PAYLOAD_SIZE; i++) {
-        *(p + cursor) = *(payload + i);
-        cursor++;
-    }
+    __qvp->number_of_supported_versions = version_index;
+    return __qvp;
 }

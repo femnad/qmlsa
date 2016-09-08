@@ -37,18 +37,17 @@ int main(int argc, char **argv) {
     char *buffer = serialize_quic_packet(qp_request);
     unsigned char *receive_buffer = malloc(sizeof(char) * 64);
     while (1) {
-        int sent_bytes = sendto(cfd, buffer, MAGIC_NUMBER, 0,
-                                (struct sockaddr *) &svaddr,
-                                sizeof(struct sockaddr));
-        printf("Sent %d bytes\n", sent_bytes);
+        sendto(cfd, buffer, MAGIC_NUMBER, 0, (struct sockaddr *) &svaddr,
+               sizeof(struct sockaddr));
         int received_bytes = recvfrom(cfd, receive_buffer, 64, 0, NULL, NULL);
-        quic_packet_buffer *server_response = get_quic_packet_from_buffer((Bytes)
+        quic_version_packet *server_response = get_quic_version_packet_from_buffer(
                                                                    receive_buffer,
                                                                    received_bytes);
-        sendto(cfd, receive_buffer, received_bytes, 0,
-                                (struct sockaddr *) &svaddr,
-                                sizeof(struct sockaddr));
-        printf("Sent %d bytes\n", sent_bytes);
+        printf("Supported versions:\n");
+        for (int i = 0; i < server_response->number_of_supported_versions; i++) {
+            printf("%s\n", *(server_response->versions + i));
+        }
+        break;
     }
     free(qp_request);
     free(qp_response);
