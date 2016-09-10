@@ -43,16 +43,10 @@ int main(int argc, char **argv) {
         num_read = recvfrom(sfd, client_request, sizeof(quic_packet), 0,
                             (struct sockaddr *) &claddr, &len);
         printf("Read %d bytes\n", num_read);
-        print_quic_packet(client_request);
         quic_packet *qp = malloc(sizeof(quic_packet));
-        quic_public_packet_header *public_header =
-            malloc(sizeof(quic_public_packet_header));
-        public_header->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET;
-        strcpy(public_header->quic_version, DEFAULT_VERSION);
-        public_header->packet_number = client_request->public_header.packet_number + 1;
-        qp->public_header = *public_header;
-        qp->sequence_number = 2;
-        int sent_bytes = sendto(sfd, qp, sizeof(quic_packet), 0,
+        qp->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET;
+        char *buffer = serialize_quic_packet(qp);
+        int sent_bytes = sendto(sfd, buffer, strlen(buffer), 0,
                                 (struct sockaddr *) &claddr, len);
         if (sent_bytes == -1) {
             perror("Error sending packet to client");
