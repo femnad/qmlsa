@@ -15,9 +15,8 @@ typedef unsigned char * Bytes;
 typedef struct _quic_packet {
     unsigned int public_flags;
     unsigned long int connection_id;
-    unsigned int quic_version;
+    unsigned char quic_version[5];
     unsigned int sequence;
-    unsigned char *payload;
 } quic_packet;
 
 typedef struct _quic_version_packet {

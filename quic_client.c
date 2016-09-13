@@ -18,14 +18,17 @@ int main(int argc, char **argv) {
     }
     int cfd = socket(AF_INET, SOCK_DGRAM, 0);
     struct sockaddr_in svaddr;
-    quic_packet *qp_response = malloc(sizeof(quic_packet));
     memset(&svaddr, 0, sizeof(struct sockaddr_in));
     svaddr.sin_family = AF_INET;
     svaddr.sin_port = htons(atoi(argv[2]));
     inet_pton(AF_INET, argv[1], &svaddr.sin_addr);
 
-    quic_packet *qp_request = malloc(sizeof(quic_packet));
-    char *buffer = serialize_quic_packet(qp_request);
+    quic_packet quic_request = { .public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_FULL_CID_PRESENT,
+                                .connection_id = get_random_connection_id(),
+                                .quic_version = "Q036",
+                                .sequence = 1
+    };
+    char *buffer = serialize_quic_packet(quic_request);
     unsigned char *receive_buffer = malloc(sizeof(char) * 64);
     while (1) {
         int sent_bytes = sendto(cfd, buffer, strlen(buffer), 0, (struct sockaddr *) &svaddr,
@@ -38,14 +41,12 @@ int main(int argc, char **argv) {
         quic_version_packet *server_response = get_quic_version_packet_from_buffer(
                                                                    receive_buffer,
                                                                    received_bytes);
-        long connection_id = network_ordered_bytes_to_long(server_response->connection_id);
-        printf("Connection ID is: %ld\n", connection_id);
+        unsigned long connection_id = network_ordered_bytes_to_long(server_response->connection_id);
+        printf("Connection ID is: %lu\n", connection_id);
         printf("Supported versions:\n");
         for (int i = 0; i < server_response->number_of_supported_versions; i++) {
             printf("%s\n", *(server_response->versions + i));
         }
         break;
     }
-    free(qp_request);
-    free(qp_response);
 }

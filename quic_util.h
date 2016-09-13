@@ -9,7 +9,7 @@ void *
 get_sub_range(void *, int, int);
 
 char *
-serialize_quic_packet(quic_packet *);
+serialize_quic_packet(quic_packet);
 
 quic_version_packet *
 get_quic_version_packet_from_buffer(Bytes, size_t);
@@ -18,8 +18,11 @@ void
 build_quic_packet_buffer(Bytes, unsigned int, unsigned long, unsigned int,
                          unsigned int, Bytes);
 
-long
+unsigned long
 network_ordered_bytes_to_long(Bytes);
 
 Bytes
-connection_id_to_network_ordered_bytes(long);
+connection_id_to_network_ordered_bytes(unsigned long);
+
+unsigned long
+get_random_connection_id();

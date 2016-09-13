@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "quic_packet.h"
 #include "quic_util.h"
@@ -25,13 +26,20 @@ get_sub_range(void *buffer, int start, int end) {
     return sub_range;
 }
 
+unsigned long get_random_connection_id() {
+    srand48(time(NULL));
+    unsigned long two_to_63 = pow(2, 63);
+    double random_multiplier = drand48() + 1;
+    return (unsigned long) (two_to_63 * random_multiplier);
+}
+
 char *
-serialize_quic_packet(quic_packet *__qp) {
+serialize_quic_packet(quic_packet __qp) {
     char *buffer = malloc(HARDCODED_PACKET_SIZE * sizeof(char));
-    memcpy(buffer, "\t", 1);
-    // Connection ID determined via d(2*64) dice throw
-    memcpy(buffer+1, connection_id_to_network_ordered_bytes(3905518428042365511), 8);
-    memcpy(buffer+9, "Q036", 4);
+    memcpy(buffer, "\r", 1);
+    Bytes connection_id = connection_id_to_network_ordered_bytes(__qp.connection_id);
+    memcpy(buffer+1, connection_id, 8);
+    memcpy(buffer+9, __qp.quic_version, 4);
     memcpy(buffer+13, "\001", 1);
     memcpy(buffer+14, "CHLO", 4);
     memcpy(buffer+19, "\0", 1);
@@ -57,7 +65,7 @@ get_quic_version_packet_from_buffer(Bytes buffer, size_t packet_size) {
     return __qvp;
 }
 
-long
+unsigned long
 network_ordered_bytes_to_long(Bytes buffer) {
     long total = 0;
     size_t buffer_length = strlen((const char *) buffer);
@@ -68,7 +76,7 @@ network_ordered_bytes_to_long(Bytes buffer) {
 }
 
 Bytes
-connection_id_to_network_ordered_bytes(long number) {
+connection_id_to_network_ordered_bytes(unsigned long number) {
     Bytes buffer = malloc(sizeof(char) * CONNECTION_ID_SIZE);
     // Start allocating from the end
     int power = 14;
