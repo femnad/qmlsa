@@ -43,8 +43,7 @@ int main(int argc, char **argv) {
         num_read = recvfrom(sfd, client_request, sizeof(quic_packet), 0,
                             (struct sockaddr *) &claddr, &len);
         printf("Read %d bytes\n", num_read);
-        quic_packet *qp = malloc(sizeof(quic_packet));
-        qp->public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET;
+        quic_packet qp = { .public_flags = PUBLIC_FLAG_VERSION | PUBLIC_FLAG_RESET};
         char *buffer = serialize_quic_packet(qp);
         int sent_bytes = sendto(sfd, buffer, strlen(buffer), 0,
                                 (struct sockaddr *) &claddr, len);

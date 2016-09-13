@@ -31,8 +31,9 @@ int main(int argc, char **argv) {
     char *buffer = serialize_quic_packet(quic_request);
     unsigned char *receive_buffer = malloc(sizeof(char) * 64);
     while (1) {
-        int sent_bytes = sendto(cfd, buffer, strlen(buffer), 0, (struct sockaddr *) &svaddr,
-               sizeof(struct sockaddr));
+        int sent_bytes = sendto(cfd, buffer, strlen(buffer), 0,
+                                (struct sockaddr *) &svaddr,
+                                sizeof(struct sockaddr));
         if (sent_bytes == -1) {
             perror("Sendto error");
             exit(1);
